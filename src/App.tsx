@@ -1,35 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import Home from "./pages/home";
+import { Provider } from "react-redux";
+import { useEffect, useState } from "react";
+import { Toaster } from "react-hot-toast";
+import AppLayout from "./layouts";
+import NProgress from "nprogress";
+import store from "./store/store";
 
-function App() {
-  const [count, setCount] = useState(0)
+function AppContent() {
+    const location = useLocation();
+    const [darkMode, setDarkMode] = useState(localStorage.getItem("theme") === "dark");
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    useEffect(() => {
+        NProgress.start(); // Start NProgress on route change
+
+        // Complete NProgress when route changes have fully completed
+        NProgress.done();
+
+        return () => {
+            NProgress.done(); // Ensure NProgress is stopped when leaving the page
+        };
+    }, [location.pathname]); // Runs every time the route changes
+
+    useEffect(() => {
+        if (darkMode) {
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("theme", "light");
+        }
+    }, [darkMode]);
+
+    return (
+        <AppLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                {/*<Route path="/cart" element={<Cart />} />*/}
+            </Routes>
+        </AppLayout>
+    );
 }
 
-export default App
+function App() {
+    return (
+        <Provider store={store}>
+            <Toaster />
+            <Router>
+                <AppContent />
+            </Router>
+        </Provider>
+    );
+}
+
+export default App;
